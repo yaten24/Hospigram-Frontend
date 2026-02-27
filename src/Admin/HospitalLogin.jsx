@@ -1,0 +1,210 @@
+import { useState } from "react";
+import { FaHospital, FaEye, FaEyeSlash } from "react-icons/fa";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+
+export default function HospitalLogin() {
+  const navigate = useNavigate();
+
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // ================= HANDLE INPUT CHANGE =================
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  // ================= HANDLE SUBMIT =================
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    setLoading(true);
+    setError("");
+
+    try {
+      const res = await axios.post(
+        "http://localhost:4000/api/hospitals/login",
+        formData,
+        {
+          withCredentials: true, // Important if using cookies
+        }
+      );
+
+      if (res.data.success) {
+        // Optional: store hospital info
+        localStorage.setItem(
+          "hospitalInfo",
+          JSON.stringify(res.data.hospital)
+        );
+
+        navigate("/hospital-dashboard");
+      } else {
+        setError(res.data.message || "Login failed");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section
+      className="relative w-full min-h-screen flex items-center justify-center bg-cover bg-center"
+      style={{
+        backgroundImage:
+          "url(https://images.unsplash.com/photo-1586773860418-d37222d8fce3)",
+      }}
+    >
+      {/* ================= OVERLAY ================= */}
+      <div className="absolute inset-0 bg-black/75" />
+
+      {/* ================= LOGIN CARD ================= */}
+      <div className="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-xl border border-white/30 shadow-2xl p-10">
+
+        {/* ICON */}
+        <div className="flex justify-center mb-6">
+          <div className="w-16 h-16 flex items-center justify-center bg-red-100 text-red-600 text-3xl shadow-md">
+            <FaHospital />
+          </div>
+        </div>
+
+        {/* HEADER */}
+        <h1 className="text-2xl font-extrabold text-gray-900 text-center">
+          Hospital Login
+        </h1>
+        <p className="text-center text-gray-600 mt-2 mb-8">
+          Access your hospital management dashboard
+        </p>
+
+        {/* ERROR MESSAGE */}
+        {error && (
+          <div className="mb-4 text-sm text-red-600 bg-red-50 border border-red-200 px-4 py-2">
+            {error}
+          </div>
+        )}
+
+        {/* FORM */}
+        <form className="space-y-6" onSubmit={handleSubmit}>
+
+          {/* EMAIL */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Hospital Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              placeholder="Enter your email address"
+              className="
+                w-full px-4 py-3
+                border border-gray-300
+                focus:border-red-600 focus:ring-1 focus:ring-red-600
+                outline-none transition
+              "
+            />
+          </div>
+
+          {/* PASSWORD */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Password
+            </label>
+
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter password"
+                className="
+                  w-full px-4 py-3 pr-12
+                  border border-gray-300
+                  focus:border-red-600 focus:ring-1 focus:ring-red-600
+                  outline-none transition
+                "
+              />
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-red-600 transition"
+              >
+                {showPassword ? <FaEyeSlash /> : <FaEye />}
+              </button>
+            </div>
+
+            {/* Forgot Password */}
+            <div className="text-right mt-2">
+              <Link
+                to="/hospital-forgot-password"
+                className="text-sm text-red-600 hover:underline"
+              >
+                Forgot Password?
+              </Link>
+            </div>
+          </div>
+
+          {/* LOGIN BUTTON */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="
+              w-full py-3
+              bg-red-600 text-white font-semibold
+              hover:bg-red-700
+              transition-all duration-200
+              shadow-md hover:shadow-lg
+              disabled:opacity-60 disabled:cursor-not-allowed
+            "
+          >
+            {loading ? "Logging in..." : "Login as Hospital"}
+          </button>
+        </form>
+
+        {/* ================= PARTNER SECTION ================= */}
+        <div className="mt-8 pt-6 text-center">
+          <p className="text-sm text-gray-600">
+            Not a Hospigram Partner?
+          </p>
+
+          <Link
+            to="/become-hospital-partner"
+            className="
+              inline-block mt-3 px-6 py-2
+              border border-red-600 text-red-600
+              hover:bg-red-600 hover:text-white
+              transition-all duration-200
+              font-semibold
+            "
+          >
+            Become a Partner
+          </Link>
+        </div>
+
+        {/* FOOTER */}
+        <p className="text-center text-xs text-gray-500 mt-6">
+          Only registered hospitals are allowed • Hospigram System
+        </p>
+      </div>
+    </section>
+  );
+}
